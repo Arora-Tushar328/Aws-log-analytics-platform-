@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml   # rw mount
+    networks:
+      - lognet
+    restart: unless-stopped
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:9.5.0
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=NewPassword123
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana   # <--- dashboards safe
+    networks:
+      - lognet
+    restart: unless-stopped
+
+  python-exporter:
+    container_name: python-exporter
+    build:
+      context: ./python-exporter
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./python-exporter/logs:/logs      # <--- logs mounted
+    networks:
+      - lognet
+    restart: unless-stopped
+
+networks:
+  lognet:
+    driver: bridge
+
+volumes:
+  grafana-data:   # persistent dashboard storage
+
