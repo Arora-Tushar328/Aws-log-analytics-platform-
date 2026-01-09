@@ -1,18 +1,9 @@
-# Python environment
 python-exporter/venv/
-
-# Logs
 python-exporter/logs/
-
-# Bytecode
+*.jar
+*.log
 __pycache__/
-
-# Environment files
 .env
-
-# Docker volumes / data
 grafana_data/
 prometheus_data/
 loki_data/
-*.log
-
