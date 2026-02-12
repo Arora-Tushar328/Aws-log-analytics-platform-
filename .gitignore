@@ -7,3 +7,11 @@ __pycache__/
 grafana_data/
 prometheus_data/
 loki_data/
+
+
+# OS files
+*.DS_Store
+*.swp
+
+# Environment / secrets
+*.env

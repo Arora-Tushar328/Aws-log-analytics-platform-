@@ -24,7 +24,7 @@ print("✅ Prometheus metrics available on port 8000")
 # -----------------------------
 # Log folder
 # -----------------------------
-log_folder = "/logs"  # mounted volume
+log_folder = "/app/logs"  # mounted volume
 print(f"Reading logs from: {log_folder}")
 
 # -----------------------------
