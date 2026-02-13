@@ -10,6 +10,7 @@ import gzip
 # -----------------------------
 total_requests = Gauge("total_requests_total", "Total requests processed")
 error_requests = Gauge("error_requests_total", "Total 4xx/5xx requests")
+unique_ips = Gauge("unique_ips", "Number of unique IP addresses")  # <-- ADDED
 top_urls = Gauge("top_url_requests", "Top requested URLs", ["url"])
 top_agents = Gauge("top_user_agents", "Top user agents", ["agent"])
 response_code_dist = Gauge("response_code_dist", "Response code distribution", ["code"])
@@ -42,6 +43,7 @@ def process_log_file(file_path):
     urls = Counter()
     agents = Counter()
     codes = Counter()
+    ips = set()  # <-- ADDED: set to collect unique IPs
 
     print(f"Processing file: {file_path}")
 
@@ -51,6 +53,7 @@ def process_log_file(file_path):
             if not match:
                 continue  # skip non-matching lines
 
+            ip = match.group(1)  # <-- ADDED: extract IP
             request = match.group(5)
             status = match.group(6)
             agent = match.group(9) if match.lastindex >= 9 else "-"
@@ -60,6 +63,7 @@ def process_log_file(file_path):
             except ValueError:
                 continue
 
+            ips.add(ip)  # <-- ADDED: add IP to set
             total_requests.inc()
 
             if status >= 400:
@@ -81,6 +85,7 @@ def process_log_file(file_path):
         response_code_dist.remove(*label)
 
     # Update Gauges
+    unique_ips.set(len(ips))  # <-- ADDED: set unique IP count
     for url, count in urls.most_common(10):
         top_urls.labels(url=url).set(count)
 
@@ -90,7 +95,7 @@ def process_log_file(file_path):
     for code, count in codes.items():
         response_code_dist.labels(code=str(code)).set(count)
 
-    print(f"✅ Finished processing: {file_path}")
+    print(f"✅ Finished processing: {file_path} – {len(ips)} unique IPs")
 
 # -----------------------------
 # Main loop
@@ -110,4 +115,3 @@ while True:
 
     print("Sleeping 60 seconds before next scan...\n")
     time.sleep(60)
-

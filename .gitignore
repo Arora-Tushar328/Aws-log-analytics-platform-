@@ -15,3 +15,7 @@ loki_data/
 
 # Environment / secrets
 *.env
+
+exit
+
+exit.pub

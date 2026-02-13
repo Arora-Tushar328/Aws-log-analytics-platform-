@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
 
   prometheus:
@@ -9,9 +7,24 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
     depends_on:
       - python-exporter
+    networks:
+      - lognet
     restart: always
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    ports:
+      - "9100:9100"
+    networks:
+      - lognet
+    restart: unless-stopped
 
   python-exporter:
     build: ./python-exporter
@@ -20,6 +33,8 @@ services:
       - "8000:8000"
     volumes:
       - ./python-exporter/logs:/app/logs
+    networks:
+      - lognet
     restart: always
 
   grafana:
@@ -35,7 +50,41 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
     depends_on:
       - prometheus
+    networks:
+      - lognet
     restart: always
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml
+      - loki_data:/loki
+    networks:
+      - lognet
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml
+      - ./python-exporter/logs:/var/log/host_logs:ro
+    networks:
+      - lognet
+    restart: unless-stopped
+    depends_on:
+      - loki
 
 volumes:
   grafana-data:
+  prometheus_data:
+  loki_data:
+
+networks:
+  lognet:
+    driver: bridge

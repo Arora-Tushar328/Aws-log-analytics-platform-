@@ -1,0 +1,61 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+  replication_factor: 1
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  tsdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/boltdb-cache
+  filesystem:
+    directory: /loki/chunks
+
+limits_config:
+  # Existing rate limits
+  ingestion_rate_mb: 100
+  ingestion_burst_size_mb: 200
+
+  # Safe limits to protect EC2
+  max_entries_limit_per_query: 5000
+  max_query_series: 500
+  max_query_length: 721h
+  retention_period: 720h
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  max_cache_freshness_per_query: 10m
+  max_query_parallelism: 4
+  query_timeout: 30s                     # ✅ moved here
+
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /tmp/rules
+  enable_api: false
+  ring:
+    kvstore:
+      store: inmemory
+
+analytics:
+  reporting_enabled: false
