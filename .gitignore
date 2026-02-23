@@ -17,6 +17,8 @@ loki_data/
 *.env
 
 exit
-
 exit.pub
+
+# Jenkins
 jenkins.war
+jenkins-agent/
