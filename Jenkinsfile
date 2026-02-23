@@ -14,16 +14,20 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                dir('python-exporter') {
-                    sh '''
-                    docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                    '''
-                }
-            }
+       stage('Build Docker Image') {
+          steps {
+             script {
+                 COMMIT_ID = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+          }
+             dir('python-exporter') {
+              sh """
+               docker build -t url-monitoring-exporter:${BUILD_NUMBER} .
+               docker tag url-monitoring-exporter:${BUILD_NUMBER} url-monitoring-exporter:latest
+               docker tag url-monitoring-exporter:${BUILD_NUMBER} url-monitoring-exporter:${COMMIT_ID}
+                """
         }
-
+    }
+}
         stage('Verify Image') {
             steps {
                 sh 'docker images | grep url-monitoring-exporter'
